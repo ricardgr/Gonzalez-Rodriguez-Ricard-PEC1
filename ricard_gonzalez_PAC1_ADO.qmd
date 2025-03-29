@@ -1,0 +1,28 @@
+---
+title: "PAC1 - Anàlisi de dades òmiques"
+author: "Ricard Gonzalez"
+date: "29-MAR-2025"
+editor: visual
+output-dir: docs
+format: 
+  pdf: 
+    toc: true
+    toc-title: "Índex"
+    include-in-header: custom.tex
+---
+
+\newpage
+
+# Resum
+
+# Objectius
+
+# Mètodes
+
+# Resultats
+
+# Discussió
+
+# Conclusions
+
+# Referències
