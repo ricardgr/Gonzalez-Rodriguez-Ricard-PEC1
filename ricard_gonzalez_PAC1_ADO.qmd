@@ -17,9 +17,80 @@ format:
 
 # Objectius
 
+Aquest informe està dedicat al compliment d'una sèrie d'objectius, esmentats a continuació:
+
+1.  Seleccionar un conjunt de dades ("*dataset*") de metabolòmica per al seu ús durant l'informe.
+
+2.  Construïr, a partir d'aquest *dataset*, un objecte de tipus *SummarizedExperiment*.
+
+3.  Comparar, a nivell conceptual, l'objecte de tipus *SummarizedExperiment* amb el seu predecessor *ExpressionSet*.
+
+4.  Dur a terme una anàlisi exploratòria de les dades.
+
+5.  Organitzar la informació, mètodes emprats, resultats de l'anàlisi i discussió i conclusions sobre aquests en un informe estructurat.
+
+6.  Creació d'un repositori de GitHub, esmentat al propi informe, on s'hi recullin totes les dades i materials necessaris per a replicar l'anàlisi descrit a l'informe.
+
+Alguns dels objectius tindràn cabuda explícita a l'informe (per exemple, l'anàlisi exploratòria de les dades). Altres, en canvi (com la creació del propi informe, o la generació d'un repositori de GitHub) son purament operatius i per tant se'n presentaràn els entregables directament (el propi informe, o un enllaç d'accés al repositori, respectivament).
+
 # Mètodes
 
 # Resultats
+
+```{r}
+#| echo: false
+#| results: hide
+
+# Carrego les llibreries, que ja he instal·lat prèviament
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(BiocManager))
+suppressPackageStartupMessages(library(Biobase))
+suppressPackageStartupMessages(library(SummarizedExperiment))
+
+# Carrego les dades escollides amb fread() 
+# (inconsequent per aquest dataset, però molt eficient amb datasets grans)
+cachexia <- fread(input = "human_cachexia.csv")
+
+### TRANSFORMACIÓ DEL DATASET CACHEXIA EN ExperimentSet
+
+## Extrec les metadades de les mostres 
+# Les dues columnes es troben a les dues primeres posicions: 
+# la columna de l'ID del pacient i la del grup experimental
+pacients <- cachexia[,1:2]
+
+## Creo la matriu de les dades metabolòmiques
+# La trasposo ja que l'objecte SummarizedExperiment 
+# requereix que als assays, les mostres siguin columnes
+data_matrix <- t(as.matrix(cachexia[, -c(1:2)]))
+
+## Assigno noms
+# Com a noms de columna de la matriu l'identificador de cada mostra
+# I també com a noms de fila a les metadades
+# Això és important per a l'estructura relacional del SummarizedExperiment
+colnames(data_matrix) <- (pacients$`Patient ID`)
+rownames(pacients) <- (pacients$`Patient ID`)
+
+## Creo el SummarizedExperiment
+# Assignant al slot assays, la matriu de valors de metabòlits
+# a l'objecte "mesures", i assigno a l'slot colData les metadades
+# com identificadors de pacient i grup experimental vía un objecte DataFrame
+dades <- SummarizedExperiment(
+  assays = list(mesures = data_matrix),
+  colData = DataFrame(pacients)
+)
+
+## Deso l'objecte SummarizedExperiment 
+# En format binari
+save(dades, file = "cachexia_summarizedExperiment.Rda")
+
+## I verifico els resultats
+# Confirmant que el mètode assay() recupera correctament la matriu de metabòlits
+# Preserva les dimensions numèriques transposades
+# I conté tant dades com metadades ben etiquetades
+dim(assay(dades))
+assay(dades)[1:2,1:2]
+colData(dades)[1:2,]
+```
 
 # Discussió
 
