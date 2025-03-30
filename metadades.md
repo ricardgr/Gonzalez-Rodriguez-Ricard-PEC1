@@ -11,6 +11,6 @@ La columna `Patient ID` es de tipus caràcter i identifica de forma única cada 
 
 La columna `Muscle loss` també és de tipus caràcter, amb els valors esmentats abans (cachexic i control), i indica el grup experimental.
 
-La resta de  variables son numèriques i  representen concentracions relatives de 63 metabolits detectats en mostres d’orina, obtingudes mitjançant RMN.
+La resta de  variables son numèriques i  representen concentracions relatives de 63 metabolits detectats en mostres d’orina, obtingudes analíticament.
 
 

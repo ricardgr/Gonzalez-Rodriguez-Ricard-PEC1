@@ -6,9 +6,13 @@ editor: visual
 output-dir: docs
 format: 
   pdf: 
+    documentclass: article
+    classoption: a4paper
+    keep-tex: true
+    include-in-header: custom.tex
     toc: true
     toc-title: "Índex"
-    include-in-header: custom.tex
+    number-sections: true
 ---
 
 \newpage
@@ -33,9 +37,79 @@ Aquest informe està dedicat al compliment d'una sèrie d'objectius, esmentats a
 
 Alguns dels objectius tindràn cabuda explícita a l'informe (per exemple, l'anàlisi exploratòria de les dades). Altres, en canvi (com la creació del propi informe, o la generació d'un repositori de GitHub) son purament operatius i per tant se'n presentaràn els entregables directament (el propi informe, o un enllaç d'accés al repositori, respectivament).
 
+\pagebreak
+
 # Mètodes
 
+## Tria del conjunt de dades
+
+Per aquest informe, es van considerar diversos conjunts de dades metabolòmiques presents al repositori proveït per l'assignatura.
+
+Entre d'altres, hi havia conjunts de dades sobre estudis de cancer gàstric, assajos de fosfoproteòmica o pèrdua de massa muscular (caquèxia).
+
+El conjunt de dades escollit ha estat el "2024-Cachexia", obtingut del repositori en format valors separats per comes (.CSV, per les seves sigles en anglès). Al llarg de l'informe, s'anomenarà *cachexia* per facilitar la lectura.
+
+Els motius que justifiquen la tria d'aquest conjunt de dades han estat el seu bon balanç cardinalitat/dimensionalitat (més mostres que dimensions), el fet que totes les variables no-metadades eren numèriques, i la claredat del conjunt de dades (sense valors perduts).
+
+Altres conjunts de dades, tot i interessants, tenien especificitats que els feien poc pràctics per un exercici centrat en entendre aspectes bàsics de Bioconductor, la programació orientada a objectes i la familiarització bàsica amb dades òmiques.
+
+Aquest conjunt de dades recull anàlisis d'orina de 77 pacients, 47 dels quals presenten caquèxia i els 30 restants son controls. De cada mostra, s'hi han determinat experimentalment els valors de 63 metabòlits.
+
+## Paquets de software utilitzats
+
+Per a la interacció amb les dades, es va utilitzar la versió *4.4.2* de **R**, i la versió de **RStudio** *2024.12.1+563*. L'informe es va generar mitjançant el paquet **quarto** en la seva versió *1.4.4*.
+
+Es van importar les dades mitjançant el paquet **data.table**, en la seva versió *1.17.0*.
+
+Respecte la manipulació de les dades, es va fer servir **Bioconductor** en la seva versió *3.20*, del què es van utilitzar els paquets **Biobase** en la versió *2.66.0* i **SummarizedExperiment** en la versió *1.36.0*. També es van utilitzar funcions del paquet **S4Vectors**, en la versió *0.44.0*.
+
+Per a l'anàlisi de les dades només es van utilitzar funcions del paquet **stats**, inclòs amb R. Per tant, no és requisit configurar versions addicionals de paquets per a l'anàlisi més enllà de la versió de R.
+
+Finalment, la presentació i visualització de les dades en figures i taules es va fer amb els paquets **ggplot2**, en versió *3.5.1*, **kableExtra**, en versió *1.4.0* i **showtext**, en versió *0.9-7*.
+
+## Creació de l'objecte SummarizedExperiment
+
+Per a la generació d'un objecte de tipus *SummarizedExperiment* a partir del conjunt de dades *cachexia*, es va seguir una estratègia metòdica, centrada en la identificació i organització progressiva del contingut del conjunt de dades per a estructurar-lo en parts de format desitjat.
+
+En primer lloc, es van separar les metadades (presents a les dues primeres columnes del conjunt, corresponent a l'identificador únic del pacient, "Patient ID", i al Grup experimental "Muscle loss").
+
+Les dades restants es van transformar en matriu transposada: aquest pas és clau, atès que els objectes *SummarizedExperiment* requereixen les variables com a files, i les observacions com a columnes. Per assegurar la integritat de les dades i la consistència relacional, es va asignar identificadors de pacient tant a la matriu de resultats metabolòmics com a la taula de metadades.
+
+Es va construïr un objecte *SummarizedExperiment* assignant la matriu transposada i etiquetada a l'*slot* "*assays*", amb el nom de "*counts*". A l'*slot* "*colData*" s'hi van assignar les metadades.
+
+L'objecte es va desar en format binari (.Rda) per facilitar-ne la reutilització.
+
+\pagebreak
+
+## Anàlisi exploratori de les dades
+
+### Objectius i preparació de les dades
+
+Per a una exploració preliminar de les dades, es va decidir examinar si era possible capturar els dos "Grups de tractament" (els pacients caquèxics versus els pacients control) en funció de la seva distància inter-pacient. De manera similar, també es va intentar capturar la variabilitat entre mostres (i, si fos possible, Grups de tractament) en funció de la covariància.
+
+Per a resoldre tots dos punts, es va procedir obtenint la matriu de metabòlits en la seva estructura original (amb els pacients com a files i els valors de metabòlit com a columnes). Es va etiquetar degudament la matriu amb codis de pacient i es va normalitzar amb la funció *scale()*, que per defecte centra i escala les dades a $\mu = 0$ i $\sigma = 1$.
+
+Addicionalment, es va calcular la matriu de distàncies entre pacients a partir de la matriu normalitzada, mitjançant la mètrica de distància Euclídia.
+
+### Escalat Multidimensional
+
+Per a intentar distingir els pacients a través de la seva distància, es va utilitzar la matriu de distàncies euclídies per a Escalat Multidimensional (MDS, per les seves sigles en anglès), mitjançant la funció *cmdscale()*. Aquesta funció es va utilitzar per obtenir una representació bidimensional de les dades projectades a través de les seves distàncies euclídies.
+
+Aquest resultat es va etiquetar posteriorment amb el Grup de tractament de cada pacient mitjançant el seu identificador, i es van visualitzar les dades.
+
+### Anàlisi de Components Principals
+
+Finalment, per capturar la variabilitat entre pacients a través de la seva covariància, es va fer servir un Anàlisi de Components Principals (PCA).
+
+Amb aquesta finalitat, la matriu normalitzada obtinguda anteriorment es va sotmetre a descomposició en components principals mitjançant la funció *prcomp()*. Es va emprar per extreure la projecció de les dades en cadascuna de les components principals, i les dues primeres components (PC1 i PC2) es van utilitzar, amb les dades etiquetades, per visualitzar els pacients en funció del seu Grup de tractament.
+
+\pagebreak
+
 # Resultats
+
+## Obtenció de l'objecte SummarizedExperiment
+
+Seguint la estratègia esmentada als Mètodes, s'ha obtingut un objecte SummarizedExperiment a partir del conjunt de dades *cachexia*.
 
 ```{r}
 #| echo: false
@@ -43,7 +117,6 @@ Alguns dels objectius tindràn cabuda explícita a l'informe (per exemple, l'an�
 
 # Carrego les llibreries, que ja he instal·lat prèviament
 suppressPackageStartupMessages(library(data.table))
-suppressPackageStartupMessages(library(BiocManager))
 suppressPackageStartupMessages(library(Biobase))
 suppressPackageStartupMessages(library(SummarizedExperiment))
 
@@ -51,11 +124,11 @@ suppressPackageStartupMessages(library(SummarizedExperiment))
 # (inconsequent per aquest dataset, però molt eficient amb datasets grans)
 cachexia <- fread(input = "human_cachexia.csv")
 
-### TRANSFORMACIÓ DEL DATASET CACHEXIA EN ExperimentSet
+### Transformació del conjunt de dades cachexia en SummarizedExperiment
 
 ## Extrec les metadades de les mostres 
 # Les dues columnes es troben a les dues primeres posicions: 
-# la columna de l'ID del pacient i la del grup experimental
+# la columna de l'ID del pacient i la del Grup experimental
 pacients <- cachexia[,1:2]
 
 ## Creo la matriu de les dades metabolòmiques
@@ -72,24 +145,166 @@ rownames(pacients) <- (pacients$`Patient ID`)
 
 ## Creo el SummarizedExperiment
 # Assignant al slot assays, la matriu de valors de metabòlits
-# a l'objecte "mesures", i assigno a l'slot colData les metadades
-# com identificadors de pacient i grup experimental vía un objecte DataFrame
+# a l'objecte "counts", i assigno a l'slot colData les metadades
+# com identificadors de pacient i Grup experimental vía un objecte DataFrame
 dades <- SummarizedExperiment(
-  assays = list(mesures = data_matrix),
+  assays = list(counts = data_matrix),
   colData = DataFrame(pacients)
 )
 
 ## Deso l'objecte SummarizedExperiment 
 # En format binari
 save(dades, file = "cachexia_summarizedExperiment.Rda")
+```
+
+```{r}
+#| echo: false
+#| results: asis
+suppressPackageStartupMessages(library(kableExtra))
 
 ## I verifico els resultats
 # Confirmant que el mètode assay() recupera correctament la matriu de metabòlits
 # Preserva les dimensions numèriques transposades
-# I conté tant dades com metadades ben etiquetades
-dim(assay(dades))
-assay(dades)[1:2,1:2]
-colData(dades)[1:2,]
+dims <- data.frame(
+  Component = c("Metabolits", "Mostres"),
+  Valor = dim(assay(dades))
+)
+
+kable(dims, format = "latex", booktabs = TRUE,
+      caption = "Dimensions de l'objecte SummarizedExperiment `dades`.") %>%
+  kable_styling(latex_options = c("striped", "scale_down"), font_size = 8)
+```
+
+```{r}
+#| echo: false
+#| results: asis
+
+# I conté tant dades...
+
+verificacio_resultats <- assay(dades)[1:5, 1:5]
+
+kable(round(verificacio_resultats, 2), format = "latex", booktabs = TRUE,
+      caption = "Primeres 5 files i 5 columnes de la matriu de metabolits de l'objecte `dades`.") %>%
+  kable_styling(latex_options = c("striped", "scale_down"), font_size = 8)
+```
+
+```{r}
+#| echo: false
+#| results: asis
+
+# ...com metadades ben etiquetades.
+
+verificacio_metadades <- as.data.frame(colData(dades))[1:5, ]
+
+kable(verificacio_metadades, format = "latex", booktabs = TRUE,
+      caption = "Metadades de les primeres 5 mostres de l'objecte `dades`.") %>%
+  kable_styling(latex_options = c("striped", "scale_down"), font_size = 8)
+```
+
+```{r}
+#| echo: false
+
+### Anàlisi exploratori de les dades part comuna 
+## (matrius, escalat, distàncies i etiquetes)
+
+# Extrec la matriu i la transposo per ubicar cada pacient en una fila
+matriu <- assay(dades)
+matriu_t <- t(matriu)
+
+# Afegeixo el identificador de pacient com a nom de cada fila
+rownames(matriu_t) <- colnames(assay(dades))
+
+# I normalitzo les dades
+matriu_z <- scale(matriu_t)
+
+# Calculo la matriu de distàncies (per a l'escalat multidimensional)
+dist_mat <- dist(matriu_z)
+
+# I extrec el Grup experimental per mostra per etiquetar després les dades
+informacio_pacients <- as.data.frame(colData(dades))
+names(informacio_pacients) <- c("ID", "Grup")
+noms_mostres <- colnames(assay(dades))
+```
+
+```{r}
+#| echo: false
+#| fig-cap: "Diagrama de dispersió que mostra la projecció en 2 dimensions del dataset cachexia transformat via escalat multidimensional (MDS). Els pacients caquèxics apareixen com a triangles vermells, i els controls com a cercles blaus."
+#| fig-align: "center"
+
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(showtext))
+showtext_auto()
+
+### Anàlisi exploratori de les dades part 2
+
+## Escalat multidimensional (MDS) de les dades metabolòmiques
+# Com a intent de capturar els dos Grups en funció de la seva distància inter-pacient
+
+# Aplico MDS a la matriu de distàncies, 
+# per obtenir una projecció en 2 dimensions
+mds <- cmdscale(dist_mat, k = 2)
+
+# Transformo el resultat a data frame
+# per poguer afegir el grup experimental
+# amb un merge via l'identificador de pacient
+mds_df <- as.data.frame(mds)
+mds_df$ID <- rownames(mds_df)
+mds_df_etiquetat <- merge(mds_df, informacio_pacients, by = "ID", sort = FALSE)
+
+# I visualitzo distingint els Grups per color i forma
+ggplot(mds_df_etiquetat, aes(x = V1, y = V2, color = Grup, shape = Grup)) +
+  geom_point(size = 3, alpha = 0.6) +
+  labs(
+    x = "Dimensió 1",
+    y = "Dimensió 2",
+    title = "MDS de les mostres d'orina segons grup experimental"
+  ) +
+  scale_color_manual(values = c("cachexic" = "tomato", "control" = "blue")) +
+  scale_shape_manual(values = c("cachexic" = 17, "control" = 19)) +
+  theme_minimal(base_family = "serif")
+```
+
+```{r}
+#| echo: false
+#| fig-cap: "Diagrama de dispersió que mostra la projecció en 2 dimensions del dataset cachexia transformat via anàlisi de components principals (PCA). Cada eix inclou entre parèntesi la variància explicada per la corresponent Component Principal. Els pacients caquèxics apareixen com a triangles vermells, i els controls com a cercles blaus."
+#| fig-align: "center"
+
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(showtext))
+showtext_auto()
+
+### Anàlisi exploratori de les dades part 3
+## PCA per a intentar capturar 
+# la variabilitat entre mostres en funció de la covariància
+
+# Aplico PCA a la matriu escalada
+pca <- prcomp(matriu_z)
+
+# Calculo la proporció de variància explicada
+var_expl <- pca$sdev^2 / sum(pca$sdev^2)
+pc1_perc <- round(var_expl[1] * 100, 1)
+pc2_perc <- round(var_expl[2] * 100, 1)
+
+# I extrec les projeccions en totes les components principals
+projeccio <- as.data.frame(pca$x)
+
+# Hi afegeixo explícitament l'identificador de pacient
+projeccio$ID <- row.names(projeccio)
+
+# I el faig servir, de nou, per adjuntar el Grup (caquèxic versus control)
+projeccio_etiquetada <- merge(projeccio, informacio_pacients, by = "ID", sort = FALSE)
+
+# Projecto les dades igual que amb l'MDS
+ggplot(projeccio_etiquetada, aes(x = PC1, y = PC2, color = Grup, shape = Grup)) +
+  geom_point(size = 3, alpha = 0.6) +
+  labs(
+  x = paste0("PC1 (", pc1_perc, "%)"),
+  y = paste0("PC2 (", pc2_perc, "%)"),
+  title = "PCA de les mostres d'orina segons grup experimental"
+  ) +
+  scale_color_manual(values = c("cachexic" = "tomato", "control" = "blue")) +
+  scale_shape_manual(values = c("cachexic" = 17, "control" = 19)) +
+  theme_minimal(base_family = "serif")
 ```
 
 # Discussió
