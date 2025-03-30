@@ -4,24 +4,28 @@ author: "Ricard Gonzalez"
 date: "29-MAR-2025"
 editor: visual
 output-dir: docs
-format: 
-  pdf: 
-    documentclass: article
-    classoption: a4paper
-    keep-tex: true
-    include-in-header: custom.tex
-    toc: true
-    toc-title: "Índex"
-    number-sections: true
+format: pdf
+bibliography: references.bib
+csl: elsevier-vancouver-short-author-list.csl
+documentclass: article
+classoption: a4paper
+keep-tex: true
+include-in-header: custom.tex
+toc: true
+toc-title: "Índex"
+number-sections: true
+    
 ---
-
-\newpage
 
 # Resum
 
+Aquest treball presenta la construcció i validació d’un objecte de tipus SummarizedExperiment a partir d’un conjunt de dades metabolòmiques obtingudes d’anàlisis d’orina de pacients amb caquèxia i controls sans. Les dades, prèviament netes i sense valors perduts, han estat integrades en una estructura òmica moderna que permet encapsular simultàniament les mesures i les metadades de cada mostra.
+
+A partir d’aquest objecte, s’han aplicat dues tècniques d’anàlisi exploratòria —escalat multidimensional (MDS) i anàlisi de components principals (PCA)— amb l’objectiu de detectar possibles patrons diferenciadors entre grups. Els resultats obtinguts mostren una manca de separació clara, si bé es poden observar tendències parcials d’agrupament en alguns pacients caquèxics.
+
 # Objectius
 
-Aquest informe està dedicat al compliment d'una sèrie d'objectius, esmentats a continuació:
+Aquest treball està dedicat al compliment d'una sèrie d'objectius, esmentats a continuació:
 
 1.  Seleccionar un conjunt de dades ("*dataset*") de metabolòmica per al seu ús durant l'informe.
 
@@ -36,8 +40,6 @@ Aquest informe està dedicat al compliment d'una sèrie d'objectius, esmentats a
 6.  Creació d'un repositori de GitHub, esmentat al propi informe, on s'hi recullin totes les dades i materials necessaris per a replicar l'anàlisi descrit a l'informe.
 
 Alguns dels objectius tindràn cabuda explícita a l'informe (per exemple, l'anàlisi exploratòria de les dades). Altres, en canvi (com la creació del propi informe, o la generació d'un repositori de GitHub) son purament operatius i per tant se'n presentaràn els entregables directament (el propi informe, o un enllaç d'accés al repositori, respectivament).
-
-\pagebreak
 
 # Mètodes
 
@@ -57,15 +59,15 @@ Aquest conjunt de dades recull anàlisis d'orina de 77 pacients, 47 dels quals p
 
 ## Paquets de software utilitzats
 
-Per a la interacció amb les dades, es va utilitzar la versió *4.4.2* de **R**, i la versió de **RStudio** *2024.12.1+563*. L'informe es va generar mitjançant el paquet **quarto** en la seva versió *1.4.4*.
+Per a la interacció amb les dades, es va utilitzar la versió *4.4.2* de **R** @R-base, i la versió de **RStudio** *2024.12.1+563* [@R-RStudio]. L'informe es va generar mitjançant el paquet **quarto** en la seva versió *1.4.4*.
 
 Es van importar les dades mitjançant el paquet **data.table**, en la seva versió *1.17.0*.
 
-Respecte la manipulació de les dades, es va fer servir **Bioconductor** en la seva versió *3.20*, del què es van utilitzar els paquets **Biobase** en la versió *2.66.0* i **SummarizedExperiment** en la versió *1.36.0*. També es van utilitzar funcions del paquet **S4Vectors**, en la versió *0.44.0*.
+Respecte la manipulació de les dades, es va fer servir **Bioconductor** en la seva versió *3.20*[@Gentleman2004], del què es van utilitzar els paquets **Biobase** en la versió *2.66.0* [@R-Biobase] i **SummarizedExperiment** en la versió *1.36.0*[@R-SummarizedExperiment]. També es van utilitzar funcions del paquet **S4Vectors**, en la versió *0.44.0*.
 
 Per a l'anàlisi de les dades només es van utilitzar funcions del paquet **stats**, inclòs amb R. Per tant, no és requisit configurar versions addicionals de paquets per a l'anàlisi més enllà de la versió de R.
 
-Finalment, la presentació i visualització de les dades en figures i taules es va fer amb els paquets **ggplot2**, en versió *3.5.1*, **kableExtra**, en versió *1.4.0* i **showtext**, en versió *0.9-7*.
+Finalment, la presentació i visualització de les dades en figures i taules es va fer amb els paquets **ggplot2**, en versió *3.5.1* [@ggplot22016], **kableExtra**, en versió *1.4.0* [@R-kableExtra] i **showtext**, en versió *0.9-7*[@R-showtext].
 
 ## Creació de l'objecte SummarizedExperiment
 
@@ -79,9 +81,7 @@ Es va construïr un objecte *SummarizedExperiment* assignant la matriu transposa
 
 L'objecte es va desar en format binari (.Rda) per facilitar-ne la reutilització.
 
-\pagebreak
-
-## Anàlisi exploratori de les dades
+## Anàlisi exploratòria de les dades
 
 ### Objectius i preparació de les dades
 
@@ -103,13 +103,16 @@ Finalment, per capturar la variabilitat entre pacients a través de la seva cova
 
 Amb aquesta finalitat, la matriu normalitzada obtinguda anteriorment es va sotmetre a descomposició en components principals mitjançant la funció *prcomp()*. Es va emprar per extreure la projecció de les dades en cadascuna de les components principals, i les dues primeres components (PC1 i PC2) es van utilitzar, amb les dades etiquetades, per visualitzar els pacients en funció del seu Grup de tractament.
 
-\pagebreak
-
 # Resultats
 
 ## Obtenció de l'objecte SummarizedExperiment
 
 Seguint la estratègia esmentada als Mètodes, s'ha obtingut un objecte SummarizedExperiment a partir del conjunt de dades *cachexia*.
+
+Les dimensions originals del conjunt de dades *cachexia* són 77 observacions i 65 columnes, de les quals 63 corresponen a variables metabolòmiques.
+
+L'objecte creat conté per separat les metadades de la matriu de mesures metabolòmiques. Per tant, les dimensions originals de *cachexia* passen a estar repartides.
+Les dimensions de l'*slot* "*assay*", que conté les dades metabolòmiques, son les següents:
 
 ```{r}
 #| echo: false
@@ -172,8 +175,12 @@ dims <- data.frame(
 
 kable(dims, format = "latex", booktabs = TRUE,
       caption = "Dimensions de l'objecte SummarizedExperiment `dades`.") %>%
-  kable_styling(latex_options = c("striped", "scale_down"), font_size = 8)
+  kable_styling(latex_options = c("HOLD_position", "striped", "scale_down"), font_size = 8)
 ```
+
+Cal recordar que la matriu està transposada respecte el conjunt de dades original, ja que *SummarizedExperiment* espera les observacions com a columnes i les variables com a files.
+
+Addicionalment, l'objecte conté a *assay* les dades:
 
 ```{r}
 #| echo: false
@@ -185,8 +192,10 @@ verificacio_resultats <- assay(dades)[1:5, 1:5]
 
 kable(round(verificacio_resultats, 2), format = "latex", booktabs = TRUE,
       caption = "Primeres 5 files i 5 columnes de la matriu de metabolits de l'objecte `dades`.") %>%
-  kable_styling(latex_options = c("striped", "scale_down"), font_size = 8)
+  kable_styling(latex_options = c("HOLD_position", "striped", "scale_down"), font_size = 8)
 ```
+
+I a l'*slot* "*colData*" les metadades:
 
 ```{r}
 #| echo: false
@@ -198,8 +207,24 @@ verificacio_metadades <- as.data.frame(colData(dades))[1:5, ]
 
 kable(verificacio_metadades, format = "latex", booktabs = TRUE,
       caption = "Metadades de les primeres 5 mostres de l'objecte `dades`.") %>%
-  kable_styling(latex_options = c("striped", "scale_down"), font_size = 8)
+  kable_styling(latex_options = c("HOLD_position", "striped", "scale_down"), font_size = 8)
 ```
+
+## Diferències entre SummarizedExperiment i ExpressionSet
+
+Per completar l’objectiu de la PAC, s’ha dut a terme una comparació conceptual vía la secció d'ajuda de RStudio entre l’objecte SummarizedExperiment i el seu antecessor ExpressionSet, tots dos definits com a classes de Bioconductor.
+
+Tots dos formats permeten encapsular dades experimentals juntament amb informació de mostra i metadades, però es diferencien en alguns aspectes:
+
+•	**ExpressionSet** agrupa totes les dades en una estructura més rígida, i permet una única matriu de dades a *assay*.
+
+•	**SummarizedExperiment**, en canvi, està dissenyat per a ser més flexible: pot gestionar múltiples assays (mesures), associar metadades enriquides i adaptar-se millor a tipus de dades diversos com ara proteòmica, metabolòmica o epigenètica (no només transcriptòmica).
+
+En aquest projecte, la diferència pràctica entre tots dos formats ha estat limitada ja que s'ha utilitzat únicament *SummarizedExperiment*. No obstant, el seu ús sembla extès a diversitat de paquets de Bioconductor i millor alineat amb les bones pràctiques d'anàlisi en el camp de la bioinformàtica. Per exemple, si haguéssim disposat també de dades de proteòmica, el nostre SummarizedExperiment hagués pogut gestionar-les simultàniament. En canvi, un ExpressionSet hagués estat limitat a una única matriu.
+
+## Resultats de l'anàlisi per MDS
+
+La següent figura projecta les mostres en dues dimensions mantenint les distàncies euclídies originals.
 
 ```{r}
 #| echo: false
@@ -264,6 +289,16 @@ ggplot(mds_df_etiquetat, aes(x = V1, y = V2, color = Grup, shape = Grup)) +
   theme_minimal(base_family = "serif")
 ```
 
+No s'observa una separació clara entre mostres caquèxiques i controls, però s'hi observen algunes agrupacions parcials. Els pacients caquèxics, en particular, presenten tendència a agrupar-se cap a valors més negatius de la primera dimensió, tot i que tots dos grups coexisteixen a regions comunes de l'espai reduït.
+
+La Dimensió 1 sembla capturar una part notable de la variabilitat entre pacients, però no permet distingir de manera precisa entre grups.
+
+## Resultats de l'anàlisi per PCA
+
+Les dues components principals expliquen, respectivament, el 40% i el 8% de la variància total de les dades.
+
+Es pot apreciar, com a la projecció de l'MDS anterior, una manca de separació nítida entre grups. Tot i així, també s'hi detecta una certa tendència de pacients caquèxics allunyats en direcció als extrems, separats de les regions de la projecció on coexisteixen tots dos grups d'individus.
+
 ```{r}
 #| echo: false
 #| fig-cap: "Diagrama de dispersió que mostra la projecció en 2 dimensions del dataset cachexia transformat via anàlisi de components principals (PCA). Cada eix inclou entre parèntesi la variància explicada per la corresponent Component Principal. Els pacients caquèxics apareixen com a triangles vermells, i els controls com a cercles blaus."
@@ -307,8 +342,47 @@ ggplot(projeccio_etiquetada, aes(x = PC1, y = PC2, color = Grup, shape = Grup)) 
   theme_minimal(base_family = "serif")
 ```
 
+De la mateixa manera que a l'escalat multidimensional, s'observa una elevada dispersió.
+
+En conjunt, les anàlisis exploratòries vía MDS i PCA no mostren una separació clara entre els grups de les primeres dimensions projectades, tot i la presència de tendències parcials d'agrupament en pacients caquèxics.
+
 # Discussió
+
+L’objectiu principal d’aquest treball ha estat construïr un objecte de tipus SummarizedExperiment a partir d’un conjunt de dades òmiques i aplicar tècniques d’anàlisi exploratòria per avaluar la presència de patrons associats a dos grups experimentals: pacients amb caquèxia i pacients control. Amb aquest propòsit, s’han aplicat tècniques de reducció de la dimensionalitat (MDS i PCA) sobre dades metabolòmiques derivades d’anàlisis d’orina, prèviament normalitzades.
+
+El conjunt de dades escollit (*cachexia*) presentava diverses característiques favorables: una mida moderada (77 mostres, 63 metabòlits), absència de valors perduts i una classificació binària clara de les mostres. Aquestes propietats el feien especialment adequat per a una anàlisi exploratòria supervisada i per la construcció d’objectes de tipus SummarizedExperiment, permetent integrar tant les dades com les metadades en un format estructurat i reutilitzable. Malgrat això, la baixa separació observada entre grups indica que, en aquest cas, la informació disponible pot no ser suficient per capturar els patrons distintius de la caquèxia amb claredat mitjançant reducció de dimensionalitat.
+
+Els resultats obtinguts a través de PCA [@Pearson1901] i MDS [@Torgerson1952] apunten en una direcció similar: la separació entre grups no és nítida. Si bé s’observen tendències parcials d’agrupament —particularment en alguns pacients caquèxics que es distribueixen cap a valors més extrems de la primera dimensió—, no es poden identificar clústers ben definits ni en l’espai de distàncies (MDS) ni en l’espai de variància (PCA).
+
+Aquest resultat pot ser interpretat com una mostra de l’heterogeneïtat pròpia de la caquèxia, en ser una síndrome multifactorial amb manifestacions clíniques variables, o com una limitació del tipus de dades disponibles. És possible que altres fonts de variabilitat —com l’estat nutricional, la teràpia farmacològica, la composició corporal o el perfil inflamatori— exerceixin un paper important però no estiguin reflectides en les mesures incloses.
+
+La comparació entre MDS i PCA reforça la validesa dels resultats, ja que totes dues tècniques projecten les mostres de manera coherent, indicant una manca de separació estructural robusta entre grups. El fet que tant una tècnica basada en distàncies com una basada en variància arribin a conclusions convergents suggereix que la distribució observada és una propietat intrínseca del conjunt de dades, i no un artefacte d’algun mètode específic. Això aporta un cert grau de robustesa a la conclusió que, amb les dades actuals, no es poden distingir clarament els dos grups.
+
+Malgrat l’ús de tècniques clàssiques de reducció de dimensionalitat, és probable que l’aplicació de mètodes alternatius com ara *t-distributed Stochastic Neighbor Embedding* (t-SNE) [@VanDerMaaten2008] o *Uniform Manifold Approximation and Projection* (UMAP) [@McInnes2018] pogués millorar la separació entre grups en cas que hi hagi estructures locals difícils de capturar linealment. De la mateixa manera, si l'anàlisi hagués estat *supervisat* (per exemple, emprant tècniques de regressió compatibles amb alta dimensionalitat) en comptes de *no-supervisat* (basant-se en anàlisi de conglomerats), podria ser que s'haguessin descobert relacions i tendències als pacients que escapin a una representació basada només en els dos primers components. Aquestes opcions podrien ser considerades en futurs treballs.
+
+Finalment, cal destacar que el format SummarizedExperiment ha demostrat ser una estructura eficaç per integrar les dades analitzades. A diferència del seu antecessor, l’objecte ExpressionSet, el SummarizedExperiment separa clarament els assays i les metadades, i permet compatibilitat amb nombrosos paquets moderns de Bioconductor. En aquest cas, tot i que la diferència funcional entre ambdós formats no ha estat determinant per al tipus d’anàlisi realitzat, l’ús de SummarizedExperiment representa una pràctica alineada amb els estàndards actuals d’anàlisi òmica reproducible.
+
+Tot i així, l'estudi té algunes limitacions, que s'han de tenir en compte.
+
+En primer lloc, la mida del conjunt de dades (77 observacions per 63 variables numèriques) és limitant: la seva cardinalitat pot ser insuficient per capturar patrons complexos, i pot haver contribuït a una no-discriminació artefactual entre grups de tractament i haver ocultat diferències biològicament rellevants.
+
+De la mateixa manera, les tècniques emprades son purament no-supervisades, pel què poden no ser les més adïents. Tot i que l'objectiu principal no era discriminar entre grups directament sino *observar la presència orgànica de separació*, una tècnica supervisada amb un objectiu més dirigit (com ara un arbre de decisió) podria haver facilitat la descoberta de patrons rellevants.
+
+Aquestes limitacions han de ser tingudes en compte a l’hora d’interpretar els resultats i extreure conclusions generals.
 
 # Conclusions
 
+En aquest treball s’ha aconseguit construir correctament un objecte de tipus SummarizedExperiment a partir d’un conjunt de dades metabolòmiques real, integrant tant les mesures quantitatives com les metadades experimentals en un format estructurat i reutilitzable. Aquesta estructura ha facilitat l’aplicació d’anàlisis exploratòries clàssiques, com l’escalat multidimensional (MDS) i l’anàlisi de components principals (PCA), per avaluar la presència de patrons associats a la caquèxia.
+
+Els resultats han mostrat una manca de separació clara entre grups, tant en termes de variància com de distància interindividual. Tot i que s’han identificat tendències parcials d’agrupament en alguns pacients caquèxics, aquestes no han estat suficients per establir una discriminació robusta. Aquest fet pot reflectir la naturalesa difusa de la caquèxia o bé limitar-se a la informació proporcionada per les dades analitzades.
+
+Metodològicament, s’ha comparat SummarizedExperiment amb el seu antecessor ExpressionSet, valorant-ne les diferències estructurals i la seva rellevància en contextos d’anàlisi òmica moderna.
+
+En conjunt, el treball ha permès posar en pràctica les competències associades a la manipulació d’objectes òmics en R, la normalització de dades, l’aplicació d’anàlisis exploratòries i la valoració crítica dels resultats obtinguts.
+
 # Referències
+
+Els materials emprats, dades i arxius amb codi necessaris per a la reproducció del treball es poden trobar en [aquest repositori de GitHub](https://github.com/ricardgr/Gonzalez-Rodriguez-Ricard-PEC1)[@RicardGithub]. En aquest, s'hi pot trobar addicionalment un arxiu en format Markdown que hi conté metadades del conjunt de dades emprat.
+
+::: {#refs}
+:::
